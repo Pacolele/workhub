@@ -33,7 +33,7 @@ stores it in `~/.config/workhub/jira-token` with mode 600 and tests it.
 | Later   | Parked |
 
 - Drag cards between lanes and up or down to set the order.
-- The badge shows the status in Jira or GitLab (Open, Issue Clarification, Preparation,
+- The badge shows the status in Jira or GitLab (Open, Reopened, Issue Clarification, Preparation,
   Development, Validate, Resolved; MR merge state; your review state). Resolved sub-tasks are left out.
 - When a ticket is Closed, an MR is merged, or an item is no longer yours, it leaves the board.
   If it comes back within 24 hours it returns to its old lane; later than that it lands in Inbox.

@@ -120,5 +120,5 @@ button:disabled { opacity: .6; cursor: progress; }
 .meta > .st-development, .meta > .st-gl-in-progress { background: var(--blue); color: var(--blue-t); }
 .meta > .st-validate, .meta > .st-gl-review, .meta > .st-mr-waiting { background: var(--teal); color: var(--teal-t); }
 .meta > .st-resolved, .meta > .st-mr-ready, .meta > .st-review-done { background: var(--green); color: var(--green-t); }
-.meta > .st-gl-blocked, .meta > .st-mr-attention { background: var(--red); color: var(--red-t); }
+.meta > .st-reopened, .meta > .st-gl-blocked, .meta > .st-mr-attention { background: var(--red); color: var(--red-t); }
 .meta > .st-open, .meta > .st-gl-new, .meta > .st-gl-open, .meta > .st-gl-parked, .meta > .st-mr-draft { background: var(--gray); color: var(--gray-t); }

@@ -15,7 +15,7 @@ token_file = "~/.config/workhub/jira-token"
 # Resolved tickets show for every issue type except Sub-task.
 jql = '''
 (assignee = currentUser() OR "Dev Engineer" = currentUser() OR "Business Analyst" = currentUser())
-AND (status in ("Open", "Issue Clarification", "Preparation", "Development", "Validate")
+AND (status in ("Open", "Reopened", "Issue Clarification", "Preparation", "Development", "Validate")
      OR (status = "Resolved" AND issuetype != "Sub-task"))
 '''
 # User fields that put a role badge on the card when they name you.
