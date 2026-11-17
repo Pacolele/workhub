@@ -3,24 +3,104 @@
 One board for your Jira tickets and your GitLab issues, MRs and review requests.
 Plan the day, keep one priority list, and always know what to pick up next.
 
-## Setup
+## Requirements
+
+- Linux or macOS
+- [uv](https://docs.astral.sh/uv/getting-started/installation/), which installs Python 3.11+ on first run
+  (workhub has no other dependencies)
+- For GitLab: the [`glab`](https://gitlab.com/gitlab-org/cli) CLI, logged in to your GitLab host
+- For Jira: a Jira Cloud account and an Atlassian API token
+- A browser for the board. `[board] window = "app"` needs Edge or Chrome.
+
+## Install
 
 ```sh
-ln -s ~/scripts/workhub/workhub ~/.local/bin/workhub
-cp config.example.toml ~/.config/workhub/config.toml
-workhub jira-token # paste your Atlassian API token once
-workhub board # start the board server
+git clone git@github.com:Pacolele/workhub.git ~/scripts/workhub
+mkdir -p ~/.local/bin ~/.config/workhub
+ln -s ~/scripts/workhub/workhub ~/.local/bin/workhub      # make sure ~/.local/bin is on your PATH
+cp ~/scripts/workhub/config.example.toml ~/.config/workhub/config.toml
+$EDITOR ~/.config/workhub/config.toml                     # fill in your GitLab host and Jira site
+glab auth login --hostname gitlab.example.com             # once, if glab is not logged in yet
+workhub jira-token                                        # paste your Atlassian API token once
+workhub board                                             # start the board server
 ```
 
-The board lives at http://localhost:8765/. Open it in Zen once and right-click the tab:
-"Add to Essentials" keeps it in every workspace, "Pin Tab" keeps it in the current one.
+The board lives at http://localhost:8765/. Open it in your browser once and pin the tab
+(in Zen: right-click the tab, "Add to Essentials" or "Pin Tab").
 `[board] window` in the config picks what `workhub board` opens: `none` (nothing, use the pinned tab),
-`browser` (a new tab in your default browser) or `app` (a separate Edge window).
+`browser` (a new tab in your default browser) or `app` (a separate Edge or Chrome window).
 
-GitLab is read through `glab api`, so it uses your existing glab login.
-Jira needs an API token from https://id.atlassian.com/manage-profile/security/api-tokens.
-A scoped token needs the Jira scopes `read:jira-work` and `read:jira-user`. `workhub jira-token`
-stores it in `~/.config/workhub/jira-token` with mode 600 and tests it.
+Tokens:
+
+- GitLab is read through `glab api`, so workhub uses your existing glab login and never sees the token.
+- Jira needs an API token from https://id.atlassian.com/manage-profile/security/api-tokens.
+  A scoped token needs the Jira scopes `read:jira-work` and `read:jira-user`.
+  `workhub jira-token` stores it in `~/.config/workhub/jira-token` with mode 600 and tests it.
+  The environment variable `JIRA_API_TOKEN` overrides the file.
+
+## Configuration
+
+The config is a TOML file at `~/.config/workhub/config.toml`. Set `WORKHUB_CONFIG` to use another path.
+Restart the board server (`workhub stop`, then `workhub board`) after you change it.
+
+```toml
+[gitlab]
+host = "gitlab.example.com"
+groups = ["my-group/my-subgroup"]
+
+[jira]
+site = "https://your-site.atlassian.net"
+email = "you@example.com"
+token_file = "~/.config/workhub/jira-token"
+jql = '''
+(assignee = currentUser() OR "Dev Engineer" = currentUser())
+AND status in ("Open", "Reopened", "Development")
+'''
+role_fields = ["Dev Engineer"]
+api_base = ""
+
+[board]
+port = 8765
+window = "none"
+sync_minutes = 10
+```
+
+| Section and key | Meaning |
+|-----------------|---------|
+| `[gitlab] host` | GitLab host name that `glab` is logged in to (required in this section) |
+| `[gitlab] groups` | Groups to search, subgroups included (required, one or more). `group = "x"` also works for one |
+| `[jira] site` | Your Jira Cloud URL, must start with `https://` (required in this section) |
+| `[jira] email` | Your Atlassian account email (required in this section) |
+| `[jira] jql` | Which tickets appear. A ticket that stops matching (closed, reassigned) leaves the board (required in this section) |
+| `[jira] role_fields` | User fields that put a role badge on the card when they name you |
+| `[jira] token_file` | Where the token is kept. Default: `~/.config/workhub/jira-token` |
+| `[jira] api_base` | Leave empty. workhub finds out whether your token needs the `api.atlassian.com` gateway (scoped tokens do) |
+| `[board] port` | Local port, 1024 to 65535. Default: 8765 |
+| `[board] window` | `none`, `browser` or `app`. Default: `app` |
+| `[board] sync_minutes` | How often the running board syncs. Default: 10 |
+
+### Sources you can add
+
+Each source is optional. Leave out a section to turn that source off.
+
+| Source | Config section | What it shows |
+|--------|----------------|---------------|
+| Jira Cloud | `[jira]` | Every ticket your JQL matches |
+| GitLab | `[gitlab]` | Open issues assigned to you, and open MRs where you are author, assignee or reviewer, in the listed groups |
+| Daily tasks | none (always on) | Tasks you add yourself with `workhub add` or the box on the board |
+
+Examples:
+
+- Only GitLab: keep `[gitlab]` and delete `[jira]`.
+- Only Jira: keep `[jira]` and delete `[gitlab]`.
+- Several GitLab groups: `groups = ["team-a", "team-b/tools"]`. All groups must be on the same `host`.
+- Different tickets: change the JQL. For example, `assignee = currentUser() AND statusCategory != Done`.
+- A new status: add its name to the `status in (...)` list in the JQL (for example `"Reopened"`).
+  The badge colour comes from the status name, and unknown names get the default grey badge.
+
+Jira Server and Data Center, GitHub, and other trackers are not supported. Sources are Python
+modules (`src/workhub/jira.py`, `src/workhub/gitlab.py`) that return a list of items, so adding
+another one means writing a new module, listing it in `src/workhub/sync.py`, and adding its name to `SOURCE_NAMES` in `src/workhub/cli.py` and `SOURCE` in `src/workhub/static/app.js`.
 
 ## How the board works
 
@@ -63,6 +143,7 @@ stores it in `~/.config/workhub/jira-token` with mode 600 and tests it.
 ## Files
 
 - Config: `~/.config/workhub/config.toml` (JQL, GitLab groups, port, window mode)
+- Jira token: `~/.config/workhub/jira-token`
 - Data: `~/.local/share/workhub/hub.db` (SQLite)
 - Server log: `~/.local/state/workhub/server.log`
 
