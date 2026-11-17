@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Work hub</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Work hub</h1>
+    <button id="next" class="next" type="button" title="Open the next item" hidden></button>
+    <form id="add" class="add" autocomplete="off">
+      <input name="text" maxlength="500" placeholder="Add a daily task (a pasted link is attached)" aria-label="Add a daily task">
+      <select name="lane" aria-label="Lane for the new task"></select>
+    </form>
+    <input id="filter" class="filter" type="search" placeholder="Filter  ( / )" aria-label="Filter cards">
+    <button id="sync" type="button">Sync</button>
+    <span id="synced" class="synced"></span>
+  </header>
+  <div id="alerts" class="alerts"></div>
+  <div id="flash" class="flash" role="alert" hidden></div>
+  <main id="board" class="board"></main>
+</body>
+</html>
